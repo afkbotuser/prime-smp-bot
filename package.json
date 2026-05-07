@@ -1,0 +1,5 @@
+"dependencies": {
+  "discord.js": "^14.0.0",
+  "aternos-api": "latest",
+  "express": "^4.18.0"
+}
