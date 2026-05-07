@@ -14,8 +14,12 @@ const commands = [
 
 client.once('ready', async () => {
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-    await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands });
-    console.log('✅ Bot is ready!');
+    try {
+        await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), { body: commands });
+        console.log('✅ Prime Leader is Ready!');
+    } catch (err) {
+        console.error("Command Registration Error:", err);
+    }
 });
 
 client.on('interactionCreate', async interaction => {
@@ -23,33 +27,40 @@ client.on('interactionCreate', async interaction => {
         await interaction.deferReply({ ephemeral: true });
 
         try {
-            // This URL tells Aternos to start your SPECIFIC server ID
-            const url = `https://aternos.org/panel/ajax/status.php?s=start`;
+            // Combine all your security cookies: Session, Server ID, and the SEC token
+            const myCookies = `ATERNOS_SESSION=${process.env.ATERNOS_SESSION}; ATERNOS_SERVER=${process.env.ATERNOS_SERVER}; ${process.env.ATERNOS_SEC_NAME}=${process.env.ATERNOS_SEC_VALUE}`;
             
-            const res = await fetch(url, {
+            const res = await fetch(`https://aternos.org/panel/ajax/status.php?s=start`, {
                 method: 'GET',
                 headers: {
-                    'Cookie': `ATERNOS_SESSION=${process.env.ATERNOS_SESSION}; ATERNOS_SERVER=${process.env.ATERNOS_SERVER}`,
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0 Safari/537.36',
+                    'Cookie': myCookies,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                     'X-Requested-With': 'XMLHttpRequest',
                     'Referer': 'https://aternos.org/server/'
                 }
             });
 
+            const data = await res.text();
+            console.log("Aternos Response:", data);
+
             await interaction.editReply("Signal sent! The SMP should be starting now.");
             
             // Send the status update to #server-status
             const channel = client.channels.cache.get(process.env.STATUS_CHANNEL_ID);
-            const embed = new EmbedBuilder()
-                .setTitle("Prime SMP Status")
-                .setDescription("🟡 **Starting...** Checking Aternos Panel.")
-                .setColor(0xFFFF00)
-                .setTimestamp();
-            
-            await channel.send({ embeds: [embed] });
+            if (channel) {
+                const embed = new EmbedBuilder()
+                    .setTitle("Prime SMP Status")
+                    .setDescription("🟡 **Starting...** Checking Aternos Panel. Please wait for the green light!")
+                    .setColor(0xFFFF00)
+                    .setFooter({ text: "Prime SMP Official Bot" })
+                    .setTimestamp();
+                
+                await channel.send({ embeds: [embed] });
+            }
 
         } catch (e) {
-            await interaction.editReply("Error: Check your Render variables.");
+            console.error("Fetch Error:", e);
+            await interaction.editReply("Error: Check your Render variables and Cookie values.");
         }
     }
 });
