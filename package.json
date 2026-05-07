@@ -1,14 +1,13 @@
 {
   "name": "prime-smp-bot",
   "version": "1.0.0",
-  "description": "Aternos bot for Prime SMP",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "discord.js": "^14.11.0",
-    "aternos-api-improved": "latest",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7"
   }
 }
